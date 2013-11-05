@@ -4,6 +4,7 @@
  */
 
 #include "game.h"
+#include <msp430.h>
 
 unsigned char initPlayer()
 {
@@ -21,6 +22,7 @@ void clearPlayer(unsigned char player)
 	writeCommandByte(player);
 	writeDataByte(' ');
 }
+
 
 unsigned char movePlayer(unsigned char player, unsigned char direction)
 {
@@ -58,9 +60,10 @@ unsigned char movePlayer(unsigned char player, unsigned char direction)
 	return player;
 }
 
+/*
 char didPlayerWin(unsigned char player)
 {
 	return player ==0xC7;
-}
+}*/
 
 

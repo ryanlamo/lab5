@@ -10,15 +10,26 @@
  */
 #include <msp430.h> 
 #include "game.h"
+#include "LCD/LCD.h"
+#include "buttons/button.h"
+
+
+void init_buttons();
 
 int main(void) {
     WDTCTL = WDTPW | WDTHOLD;
 
     unsigned char player = initPlayer();
 
-    _init_timer();
+    initSPI();
+    LCDinit();
+    LCDclear();
+
+ //   _init_timer();
     init_buttons();
-    _enable_interrupt();
+ //   _enable_interrupt();
+
+    printPlayer(player);
 
     while(1)
     {
@@ -29,6 +40,7 @@ int main(void) {
 	return 0;
 }
 
+/*
 void init_timer()
 {
 	TACTL &= ~(MC1|MC0);
@@ -47,22 +59,20 @@ __interrupt void TIMER0_A1_ISR()
 	TACTL &= ~TAIFG;
 	flag =1;
 }
-
+*/
 void init_buttons()
 {
-	configureP1PinAsButton(1);
-	configureP1PinAsButton(2);
-	configureP1PinAsButton(3);
-	configureP1PinAsButton(4);
+	configureP1PinAsButton(BIT1|BIT2|BIT3|BIT4);
+
 	P1DIR &= ~(BIT1|BIT2|BIT3|BIT4);
 
 	P1IE |= BIT1|BIT2|BIT3|BIT4;
-	P1IES |= BIT1|BIT2|BIT3|BIT4|;
+	P1IES |= BIT1|BIT2|BIT3|BIT4;
 
-	P1REN |= BIT1|BIT2|BIT3|BIT4|;
-	P1OUT |= BIT1|BIT2|BIT3|BIT4|;
+	P1REN |= BIT1|BIT2|BIT3|BIT4;
+	P1OUT |= BIT1|BIT2|BIT3|BIT4;
 
-	P1IFG &= ~(BIT1|BIT2|BIT3|BIT4|);
+	P1IFG &= ~(BIT1|BIT2|BIT3|BIT4);
 
 
 }
