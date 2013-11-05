@@ -5,9 +5,12 @@
  * from the top left corner of the LCD to the bottom right corner.
  * Requires LCD.h and buttons/buttons.h to be included.
  * Documentation: I used Capt Branchflower's code on github as a guide for the general set-up
- * of the program.
+ * of the program. I looked to Jason Mossing's file to get an idea of how to deal with the boundary
+ * conditions of the LCD to move the cursor using the case command.
  */
 #include <msp430.h> 
+#include "game.h"
+
 int main(void) {
     WDTCTL = WDTPW | WDTHOLD;
 
@@ -28,10 +31,38 @@ int main(void) {
 
 void init_timer()
 {
+	TACTL &= ~(MC1|MC0);
+	TACTL |= TACLR;
+	TACTL |= TASSEL1;
+	TACTL |= ID1|ID0;
+	TACTL &= ~ TAIFG;
+	TACTL |= MC1;
+	TACTL |= TAIE;
 
+}
+
+#pragma vector=TIMER0_A1_VECTOR
+__interrupt void TIMER0_A1_ISR()
+{
+	TACTL &= ~TAIFG;
+	flag =1;
 }
 
 void init_buttons()
 {
+	configureP1PinAsButton(1);
+	configureP1PinAsButton(2);
+	configureP1PinAsButton(3);
+	configureP1PinAsButton(4);
+	P1DIR &= ~(BIT1|BIT2|BIT3|BIT4);
+
+	P1IE |= BIT1|BIT2|BIT3|BIT4;
+	P1IES |= BIT1|BIT2|BIT3|BIT4|;
+
+	P1REN |= BIT1|BIT2|BIT3|BIT4|;
+	P1OUT |= BIT1|BIT2|BIT3|BIT4|;
+
+	P1IFG &= ~(BIT1|BIT2|BIT3|BIT4|);
+
 
 }
