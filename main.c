@@ -15,24 +15,44 @@
 
 
 void init_buttons();
+void movecursor(char buttonToTest);
+void init_timer();
+
+
+char player =0;
+char CountTimer = 0;
+char buttonToTest = 0;
 
 int main(void) {
     WDTCTL = WDTPW | WDTHOLD;
 
-    unsigned char player = initPlayer();
+    player = initPlayer();
 
     initSPI();
     LCDinit();
     LCDclear();
 
- //   _init_timer();
-    init_buttons();
- //   _enable_interrupt();
-
     printPlayer(player);
+
+    init_timer();
+    init_buttons();
+   __enable_interrupt();
+
+
 
     while(1)
     {
+
+    	if (CountTimer >=4)
+    	{
+    		TACTL &= ~TAIE;
+    		LCDclear();
+    		cursorToLineOne();
+    		writeString("Game");
+    		cursorToLineTwo();
+    		writeString("Over");
+
+    	}
 
     }
 
@@ -40,7 +60,7 @@ int main(void) {
 	return 0;
 }
 
-/*
+
 void init_timer()
 {
 	TACTL &= ~(MC1|MC0);
@@ -57,22 +77,65 @@ void init_timer()
 __interrupt void TIMER0_A1_ISR()
 {
 	TACTL &= ~TAIFG;
-	flag =1;
+	CountTimer++;
 }
-*/
+
 void init_buttons()
 {
 	configureP1PinAsButton(BIT1|BIT2|BIT3|BIT4);
 
-	P1DIR &= ~(BIT1|BIT2|BIT3|BIT4);
+//	P1DIR &= ~(BIT1|BIT2|BIT3|BIT4);
 
 	P1IE |= BIT1|BIT2|BIT3|BIT4;
 	P1IES |= BIT1|BIT2|BIT3|BIT4;
 
-	P1REN |= BIT1|BIT2|BIT3|BIT4;
-	P1OUT |= BIT1|BIT2|BIT3|BIT4;
+//	P1REN |= BIT1|BIT2|BIT3|BIT4;
+//	P1OUT |= BIT1|BIT2|BIT3|BIT4;
 
 	P1IFG &= ~(BIT1|BIT2|BIT3|BIT4);
 
 
+}
+
+void TestForButtonPress(char buttonToTest)
+{
+	if (buttonToTest & P1IFG)
+	{
+		if (buttonToTest & P1IES)
+		{
+			movecursor(buttonToTest);
+
+		}else
+		{
+			debounce();
+		}
+
+		P1IES ^= buttonToTest;
+		P1IFG &= ~buttonToTest;
+	}
+}
+
+void movecursor(char buttonToTest)
+{
+	switch(buttonToTest){
+
+	case BIT1:
+		player = movePlayer(player,RIGHT);
+		break;
+	case BIT2:
+		player = movePlayer(player,LEFT);
+		break;
+	case BIT3:
+		player = movePlayer(player,UP);
+		break;
+	case BIT4:
+		player = movePlayer(player,DOWN);
+
+	}
+}
+
+#pragma vector = PORT1_VECTOR
+__interrupt void Port_1_ISR(void)
+{
+	TestForButtonPress(BIT1|BIT2|BIT3|BIT4);
 }

@@ -16,11 +16,15 @@
 
 unsigned char initPlayer();
 
+void writeCommandByte(char commandByte);
+
+void writeDataByte(char databyte);
+
 void printPlayer(unsigned char player);
 
 void clearPlayer(unsigned char player);
 
-// unsigned char movePlayer(unsigned char player, unsigned char direction);
+unsigned char movePlayer(unsigned char player, unsigned char direction);
 
 char didPlayerWin(unsigned char player);
 
