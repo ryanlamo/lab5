@@ -60,10 +60,6 @@ unsigned char movePlayer(unsigned char player, unsigned char direction)
 	return player;
 }
 
-/*
-char didPlayerWin(unsigned char player)
-{
-	return player ==0xC7;
-}*/
+
 
 
