@@ -13,21 +13,28 @@
 #include "LCD/LCD.h"
 #include "buttons/button.h"
 
-
 void init_buttons();
 void TestForButtonPress(char buttonToTest);
 void movecursor(char buttonToTest);
 void moveplayer(unsigned char player, unsigned char direction);
 void init_timer();
-void ClearTimer()
-{
-	TACTL |= TACLR;
-}
+
+void ResetGame(char buttonToTest);
+void RenewGame();
 
 char player =0;
 char CountTimer = 0;
 char buttonToTest = 0;
-char gamedone=0;
+char gamedone = 0;
+
+void ClearTimer()
+{
+	TACTL |= TACLR;
+	CountTimer = 0;
+}
+
+
+
 
 int main(void) {
     WDTCTL = WDTPW | WDTHOLD;
@@ -38,27 +45,33 @@ int main(void) {
     LCDinit();
     LCDclear();
 
+    RenewGame();
+
     printPlayer(player);
+
 
     init_timer();
     init_buttons();
    __enable_interrupt();
 
 
-
     while(1)
     {
 
-/*    	if (player=0xC7)
+    	if (player==0xC7)
     	{
-    		__disable_interrupt();
-    		ClearTimer();
+
+    		TACTL &= ~TAIE;
     		LCDclear();
     		cursorToLineOne();
     		writeString("YOU");
     		cursorToLineTwo();
     		writeString("WON!");
-    	}*/
+    		gamedone = 1;
+    		_delay_cycles(1000000);
+
+   	    }
+
 
     	if (CountTimer >=4)
     	{
@@ -69,6 +82,7 @@ int main(void) {
     		cursorToLineTwo();
     		writeString("Over");
     		gamedone = 1;
+    		_delay_cycles(1000000);
 
     	}
 
@@ -87,15 +101,9 @@ void init_timer()
 	TACTL &= ~ TAIFG;
 	TACTL |= MC1;
 	TACTL |= TAIE;
-
 }
 
-#pragma vector=TIMER0_A1_VECTOR
-__interrupt void TIMER0_A1_ISR()
-{
-	TACTL &= ~TAIFG;
-	CountTimer++;
-}
+
 
 void init_buttons()
 {
@@ -113,6 +121,8 @@ void init_buttons()
 
 
 }
+
+
 
 void TestForButtonPress(char buttonToTest)
 {
@@ -135,33 +145,76 @@ void TestForButtonPress(char buttonToTest)
 void movecursor(char buttonToTest)
 {
 	clearPlayer(player);
+	ClearTimer();
 	switch(buttonToTest){
 		case BIT1:
 			player = movePlayer(player,RIGHT);
-			ClearTimer();
 			break;
 		case BIT2:
 			player = movePlayer(player,LEFT);
-			ClearTimer();
 			break;
 		case BIT3:
 			player = movePlayer(player,UP);
-			ClearTimer();
 			break;
 		case BIT4:
 			player = movePlayer(player,DOWN);
-			ClearTimer();
 			break;
 	}
 	printPlayer(player);
 }
 
+void RenewGame()
+{
+	gamedone = 0;
+	LCDclear();
+	player = initPlayer();
+	printPlayer(player);
+
+}
+
+void ResetGame(char buttonToTest)
+{
+	if (buttonToTest & P1IFG)
+	{
+		if (buttonToTest & P1IES)
+		{
+			RenewGame();
+			ClearTimer();
+			TACTL |= TAIE;
+
+		}else
+		{
+			debounce();
+		}
+
+		P1IES ^= buttonToTest;
+		P1IFG &= ~buttonToTest;
+	}
+}
+
 #pragma vector = PORT1_VECTOR
 __interrupt void Port_1_ISR(void)
 {
+	if (gamedone == 0)
+	{
 	TestForButtonPress(BIT1);
 	TestForButtonPress(BIT2);
 	TestForButtonPress(BIT3);
 	TestForButtonPress(BIT4);
+	}
+	else{
+		ResetGame(BIT1);
+		ResetGame(BIT2);
+		ResetGame(BIT3);
+		ResetGame(BIT4);
 
+	}
+
+}
+
+#pragma vector=TIMER0_A1_VECTOR
+__interrupt void TIMER0_A1_ISR()
+{
+	TACTL &= ~TAIFG;
+	CountTimer++;
 }
