@@ -15,13 +15,19 @@
 
 
 void init_buttons();
+void TestForButtonPress(char buttonToTest);
 void movecursor(char buttonToTest);
+void moveplayer(unsigned char player, unsigned char direction);
 void init_timer();
-
+void ClearTimer()
+{
+	TACTL |= TACLR;
+}
 
 char player =0;
 char CountTimer = 0;
 char buttonToTest = 0;
+char gamedone=0;
 
 int main(void) {
     WDTCTL = WDTPW | WDTHOLD;
@@ -43,6 +49,17 @@ int main(void) {
     while(1)
     {
 
+/*    	if (player=0xC7)
+    	{
+    		__disable_interrupt();
+    		ClearTimer();
+    		LCDclear();
+    		cursorToLineOne();
+    		writeString("YOU");
+    		cursorToLineTwo();
+    		writeString("WON!");
+    	}*/
+
     	if (CountTimer >=4)
     	{
     		TACTL &= ~TAIE;
@@ -51,6 +68,7 @@ int main(void) {
     		writeString("Game");
     		cursorToLineTwo();
     		writeString("Over");
+    		gamedone = 1;
 
     	}
 
@@ -59,7 +77,6 @@ int main(void) {
 	
 	return 0;
 }
-
 
 void init_timer()
 {
@@ -84,13 +101,13 @@ void init_buttons()
 {
 	configureP1PinAsButton(BIT1|BIT2|BIT3|BIT4);
 
-//	P1DIR &= ~(BIT1|BIT2|BIT3|BIT4);
+	P1DIR &= ~(BIT1|BIT2|BIT3|BIT4);
 
 	P1IE |= BIT1|BIT2|BIT3|BIT4;
 	P1IES |= BIT1|BIT2|BIT3|BIT4;
 
-//	P1REN |= BIT1|BIT2|BIT3|BIT4;
-//	P1OUT |= BIT1|BIT2|BIT3|BIT4;
+	P1REN |= BIT1|BIT2|BIT3|BIT4;
+	P1OUT |= BIT1|BIT2|BIT3|BIT4;
 
 	P1IFG &= ~(BIT1|BIT2|BIT3|BIT4);
 
@@ -117,25 +134,34 @@ void TestForButtonPress(char buttonToTest)
 
 void movecursor(char buttonToTest)
 {
+	clearPlayer(player);
 	switch(buttonToTest){
-
-	case BIT1:
-		player = movePlayer(player,RIGHT);
-		break;
-	case BIT2:
-		player = movePlayer(player,LEFT);
-		break;
-	case BIT3:
-		player = movePlayer(player,UP);
-		break;
-	case BIT4:
-		player = movePlayer(player,DOWN);
-
+		case BIT1:
+			player = movePlayer(player,RIGHT);
+			ClearTimer();
+			break;
+		case BIT2:
+			player = movePlayer(player,LEFT);
+			ClearTimer();
+			break;
+		case BIT3:
+			player = movePlayer(player,UP);
+			ClearTimer();
+			break;
+		case BIT4:
+			player = movePlayer(player,DOWN);
+			ClearTimer();
+			break;
 	}
+	printPlayer(player);
 }
 
 #pragma vector = PORT1_VECTOR
 __interrupt void Port_1_ISR(void)
 {
-	TestForButtonPress(BIT1|BIT2|BIT3|BIT4);
+	TestForButtonPress(BIT1);
+	TestForButtonPress(BIT2);
+	TestForButtonPress(BIT3);
+	TestForButtonPress(BIT4);
+
 }
